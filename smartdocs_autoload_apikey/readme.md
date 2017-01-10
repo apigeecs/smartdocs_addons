@@ -1,4 +1,7 @@
-** This module provides as an example only for the community, and it is supported with best-effort via GitHub issues or community.apigee.com. **
+This is an open-source project from Apigee. It is not covered by Apigee support
+contracts. However, we will support you as best we can. For help, please open an
+issue in this GitHub project or on community.apigee.com. You are also always
+welcome to submit a pull request.
 
 Use this module if you want :
 1. to add a default API key to all your SmartDocs models 
