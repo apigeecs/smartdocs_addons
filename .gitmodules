@@ -1,6 +1,8 @@
 [submodule "smartdocs_service"]
 	path = smartdocs_service
 	url = https://github.com/apigeecs/smartdocs_service
+	branch = master
 [submodule "smartdocs_oauth_additions"]
 	path = smartdocs_oauth_additions
 	url = https://github.com/giteshk/smartdocs_oauth_additions
+	branch = master
