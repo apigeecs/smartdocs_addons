@@ -1,0 +1,5 @@
+name = SmartDocs Autoload APIKey
+description = "Module to allow autoloading of logged in users API Keys on SmartDocs Nodes"
+package = "SmartDocs"
+core = "7.x"
+configure = admin/config/smartdocs/autoload_apikey

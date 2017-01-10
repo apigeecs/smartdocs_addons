@@ -1,0 +1,80 @@
+<?php
+
+/**
+ * Implements hook_preprocess_page
+ *
+ * On SmartDocs methods add javascript to allow logged in users to select one of their existing API Keys
+ * for anonymous users it will use the default key if one is specified
+ * @param $node
+ * @param $view_mode
+ * @param $langcode
+ */
+function smartdocs_autoload_apikey_preprocess_page(&$vars){
+  $item = menu_get_item();
+  if($item['map'][0] == 'node' && $item['map'][1]->type == 'smart_method'){
+    $options = array();
+    $info = array('param_name' => '', 'param_in' => '');
+    if(user_is_logged_in()) {
+      global $user;
+      $app_entities = entity_load('developer_app', FALSE, array('mail' => $user->mail));
+      array_walk($app_entities, function ($app) use (&$options, $api_products) {
+        // TODO Each Developer app status should be stored in constants on
+        // the Drupal side. Ex.: DEVELOPER_APP_STATUS_APPROVED.
+        if ($app->credentialStatus == 'approved' && !array_intersect($api_products, $app->apiProducts)) {
+          $options[$app->consumerKey] = $app->attributes['DisplayName'];
+        }
+      });
+      asort($options);
+    }
+    $default_key = variable_get('smartdocs_default_apikey', FALSE);
+    $node = $item['map'][1];
+    $security = new \Apigee\SmartDocs\Security(devconnect_default_org_config(), $node->field_smart_method_model[LANGUAGE_NONE][0]['taxonomy_term']->name, $node->field_smart_method_revision_num[LANGUAGE_NONE][0]['value']);
+    foreach($node->field_smart_method_security[LANGUAGE_NONE] as $row){
+      $scheme = $security->load($row['value']);
+      if($scheme instanceof \Apigee\SmartDocs\Security\ApiKeyScheme){
+        $info['param_name'] = $scheme->getParamName();
+        $info['param_in'] = strtolower($scheme->getIn());
+        break;
+      }
+    }
+    if(!empty($options) || $default_key) {
+      if($default_key) {
+        $options = array($default_key => "Default Key") + $options;
+      }
+      $info['credentials'] = $options;
+    }
+    //Set the autoload apikey settings and add the JS logic
+    drupal_add_js(array('smartdocs_autoload_apikey' => $info), 'setting');
+    drupal_add_js(drupal_get_path("module", "smartdocs_autoload_apikey") . "/smartdocs_autoload_apikey.js");
+  }
+}
+/**
+ * Implements hook_menu
+ * 
+ * Module configuration page to store the default api key
+ *
+ */
+function smartdocs_autoload_apikey_menu(){
+  $items = array();
+  $items['admin/config/smartdocs/autoload_apikey'] = array(
+    'title' => 'SmartDocs Plugin (Autoload APIKey)',
+    'description' => 'Apigee SmartDocs plugin to autoload apikey',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('smartdocs_autoload_apikey_admin_form'),
+    'access arguments' => array('administer site configuration'),
+  );
+  return $items;
+}
+
+/**
+ * Admin form for storing the default api key.
+ */
+function smartdocs_autoload_apikey_admin_form(array $form, array &$form_state) {
+  $form['smartdocs_default_apikey'] = array(
+    '#title' => 'Default APIKey',
+    '#description' => 'Please specify a default APIKey to use for all SmartDocs Models',
+    '#type' => 'textfield',
+    '#default_value' => variable_get('smartdocs_default_apikey', ''),
+  );
+  return system_settings_form($form);
+}
