@@ -11,7 +11,7 @@
  */
 function smartdocs_autoload_apikey_preprocess_page(&$vars){
   $item = menu_get_item();
-  if($item['map'][0] == 'node' && $item['map'][1]->type == 'smart_method'){
+  if(count($item['map']) == 2 && $item['map'][0] == 'node' && $item['map'][1]->type == 'smart_method'){
     $options = array();
     $info = array('param_name' => '', 'param_in' => '');
     if(user_is_logged_in()) {
